@@ -35,17 +35,16 @@ class BatchLoader:
         """
 
         ########################################
-        # TODO: implement
+        idx = torch.randperm(self.x.shape[0]) if self.shuffle else torch.arange(self.x.shape[0])
+        i = 0
+        while i < self.x.shape[0]:
+            if self.y is None:
+                yield self.x[idx[i:i + self.batch_size]],
+            else:
+                yield self.x[idx[i:i + self.batch_size]], self.y[idx[i:i + self.batch_size]]
 
-        # Recommended approach:
-        # 1. Create tensor of indices into self.x. If self.shuffle, then the indices should be randomly reodered.
-        # 2. Loop over the indices in groups (i.e. batches) of size self.batch_size
-        #    2.1 `yield` rows of self.x (and self.y if it is not None) as indexed by the current batch of indices
-        #    2.2 stop if there are no more batches
+            i += self.batch_size
 
-
-
-        # ENDTODO
         ########################################
 
     def __len__(self) -> int:

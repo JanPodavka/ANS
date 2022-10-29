@@ -149,6 +149,8 @@ class TestSoftmaxCrossEntropyGradients(ANSTestCase):
         loss.backward()
         expected_dweight = weight.grad
         expected_dbias = bias.grad
+        print(expected_dbias,expected_dweight)
+
         dweight, dbias = self.params['softmax_cross_entropy_gradients_fn'](inputs, logits, targets)
         torch.testing.assert_allclose(dweight, expected_dweight, rtol=1e-3, atol=1e-4)
         torch.testing.assert_allclose(dbias, expected_dbias, rtol=1e-3, atol=1e-4)
