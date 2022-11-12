@@ -55,7 +55,7 @@ class TestPow(ANSTestCase):
         for shape in self.shapes:
             for power in self.powers:
                 # forward pass
-                x = torch.randn(shape, requires_grad=True)
+                x = torch.rand(shape, requires_grad=True)
                 y = x ** power
                 x_var = ans.autograd.Variable(x)
                 y_var = x_var ** power
@@ -86,6 +86,7 @@ class TestTopologicalSort(ANSTestCase):
             for shape in self.shapes:
                 variables = example_fn(shape)
                 variables_sorted = variables[-1].predecessors()
+                self.assertTrue(len(variables), len(variables_sorted))
                 ranks = {var: variables_sorted.index(var) for var in variables}
                 for var1 in variables:
                     for var2 in variables:

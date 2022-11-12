@@ -1,7 +1,11 @@
 import ast
 import inspect
+import re
+import textwrap
 from typing import Any, Callable, Optional, Union
 import unittest
+
+import torch
 
 
 class ANSTestCase(unittest.TestCase):
@@ -42,12 +46,21 @@ class ANSTestCase(unittest.TestCase):
     def inspect_function_dependencies(func: Callable) -> list[str]:
         return [
             ANSTestCase._ast_node_name(node.func)
-            for node in ast.walk(ast.parse(inspect.getsource(func)))
+            for node in ast.walk(ast.parse(ANSTestCase.get_source(func)))
             if isinstance(node, ast.Call)
         ]
 
+    @staticmethod
+    def get_source(object: Any) -> str:
+        source = inspect.getsource(object)
+        while re.match('\s+', source):
+            source = textwrap.dedent(source)
+        return source
+
     def assertNotCalling(self, func: Callable, names: list[str]) -> None:
-        for node in ast.walk(ast.parse(inspect.getsource(func))):
+        source = self.get_source(func)
+
+        for node in ast.walk(ast.parse(source)):
             if isinstance(node, ast.Call):  # check not directly calling forbidden name
                 call_name = self._ast_node_name(node.func)
             elif isinstance(node, ast.Assign):  # check not assigning alias to forbidden name
@@ -70,3 +83,21 @@ class ANSTestCase(unittest.TestCase):
             for e in ast.walk(ast.parse(inspect.getsource(func)))
         ):
             self.fail(msg=f"Manual loops are not allowed inside {func.__qualname__}")
+
+    def assertTensorsClose(
+            self,
+            actual: torch.Tensor,
+            expected: torch.Tensor,
+            rtol: float = 1e-3,
+            atol: float = 1e-4
+    ) -> None:
+        try:
+            msg = ""
+            torch.testing.assert_close(actual, expected, rtol=rtol, atol=atol)
+        except AssertionError as e:
+            msg = f"{e}\n"
+            if self.params.get('verbose', True):
+                msg += f"\nActual\n{actual}\n"
+                msg += f"\nExpected\n{expected}\n"
+        if msg:
+            self.fail(msg=msg)

@@ -37,38 +37,50 @@ class Variable:
 
     def __add__(self, other: 'Variable') -> 'Variable':
         ########################################
-        # TODO: implement
+        def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            return dout.clone(), dout.clone()
 
-        ...
-
-        # ENDTODO
+        return Variable(
+            self.data + other.data,
+            parents=(self, other),
+            grad_fn=grad_fn
+        )
         ########################################
 
     def __sub__(self, other: 'Variable') -> 'Variable':
         ########################################
-        # TODO: implement
+        def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            return dout.clone(), -dout.clone()
 
-        ...
-
-        # ENDTODO
+        return Variable(
+            self.data - other.data,
+            parents=(self, other),
+            grad_fn=grad_fn
+        )
         ########################################
 
     def __mul__(self, other: 'Variable') -> 'Variable':
         ########################################
-        # TODO: implement
+        def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            return dout * other.data, dout * self.data
 
-        ...
-
-        # ENDTODO
+        return Variable(
+            self.data * other.data,
+            parents=(self, other),
+            grad_fn=grad_fn
+        )
         ########################################
 
     def __pow__(self, power, modulo=None):
         ########################################
-        # TODO: implement
+        def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor,]:
+            return power * (self.data ** (power - 1)) * dout,
 
-        ...
-
-        # ENDTODO
+        return Variable(
+            self.data ** power,
+            parents=(self, power),
+            grad_fn=grad_fn
+        )
         ########################################
 
     def predecessors(self) -> list['Variable']:
@@ -82,8 +94,6 @@ class Variable:
 
         ########################################
         # TODO: implement
-
-
 
         # ENDTODO
         ########################################
@@ -102,8 +112,6 @@ class Variable:
 
         ########################################
         # TODO: implement
-
-
 
         # ENDTODO
         ########################################
@@ -147,7 +155,7 @@ class Variable:
                     node_label += f" | grad = {node.grad.item():.3f}"
             return node_uid, node_label
 
-        def get_func_info(node:'Variable') -> tuple[str, str]:
+        def get_func_info(node: 'Variable') -> tuple[str, str]:
             """
             The function is analogous to get_node_info, but used for graph nodes that represent operations such as summation or
             multiplication. Automatically determines unique identifier and display label.
@@ -172,8 +180,6 @@ class Variable:
 
         ########################################
         # TODO: implement
-
-
 
         # ENDTODO
         ########################################
