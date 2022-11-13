@@ -78,7 +78,7 @@ class Variable:
 
         return Variable(
             self.data ** power,
-            parents=(self, power),
+            parents=(self,),
             grad_fn=grad_fn
         )
         ########################################
@@ -90,15 +90,14 @@ class Variable:
             predecessors: Topologically sorted list of node's predecessors including self.
         """
 
+
+        ########################################
         predecessors = []
+        visited = []
+        return dfs(self, predecessors, visited)
 
         ########################################
-        # TODO: implement
 
-        # ENDTODO
-        ########################################
-
-        return predecessors
 
     def backprop(self, dout: Optional[torch.Tensor] = None) -> None:
         """
@@ -258,3 +257,15 @@ def gradcheck(
                 torch.set_printoptions(profile='default')
 
     return ok
+
+
+def dfs(root, out, visited):
+    if root.parents:
+        for child in root.parents:
+            if child not in visited:
+                visited.append(child)
+                dfs(child, out, visited)
+        out.append(root)  # if all parents nodes are already closed
+    else:
+        out.append(root)  # if nodes are last in the graph
+    return out
