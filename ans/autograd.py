@@ -3,6 +3,7 @@ import re
 from typing import Any, Callable, Optional, Union
 
 import graphviz
+import numpy as np
 import torch
 
 
@@ -62,7 +63,7 @@ class Variable:
     def __mul__(self, other: 'Variable') -> 'Variable':
         ########################################
         def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-            return dout * other.data, dout * self.data
+            return dout.clone() * other.data.clone(), dout.clone() * self.data.clone()
 
         return Variable(
             self.data * other.data,
@@ -74,7 +75,7 @@ class Variable:
     def __pow__(self, power, modulo=None):
         ########################################
         def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor,]:
-            return power * (self.data ** (power - 1)) * dout,
+            return power * (self.data.clone() ** (power - 1)) * dout.clone(),
 
         return Variable(
             self.data ** power,
@@ -90,14 +91,12 @@ class Variable:
             predecessors: Topologically sorted list of node's predecessors including self.
         """
 
-
         ########################################
         predecessors = []
         visited = []
         return dfs(self, predecessors, visited)
 
         ########################################
-
 
     def backprop(self, dout: Optional[torch.Tensor] = None) -> None:
         """
@@ -110,9 +109,21 @@ class Variable:
         """
 
         ########################################
-        # TODO: implement
+        nodes = self.predecessors()[::-1]
+        if type(dout) == torch.Tensor:
+            nodes[0].grad = dout
+        else:
+            dout = torch.ones_like(nodes[0].data)
+            nodes[0].grad = dout
 
-        # ENDTODO
+        for node in nodes:
+            if node.grad_fn:
+                grad = node.grad_fn(node.grad)
+                for i, parent in enumerate(node.parents):
+                    if parent.grad is not None:
+                        parent.grad += grad[i]
+                    else:
+                        parent.grad = grad[i]
         ########################################
 
     def to_graphviz(self, show_data: bool = False) -> graphviz.Digraph:
@@ -177,11 +188,24 @@ class Variable:
             torch.set_printoptions(profile='short', threshold=6, edgeitems=1)
         dot = graphviz.Digraph(graph_attr={'rankdir': 'LR'})
 
-        ########################################
-        # TODO: implement
+        #######################################
+        nodes = self.predecessors()
+        for node in nodes:
+            if node.grad_fn is None:
+                node_uid, node_label = get_node_info(node)
+                dot.node(node_uid, label=node_label, shape='record')
+            else:
+                func_uid, func_label = get_func_info(node)
+                dot.node(func_uid, label=func_label)
+                for parent in node.parents:
+                    node_uid, node_label = get_node_info(parent)
+                    dot.edge(node_uid, func_uid)
 
-        # ENDTODO
-        ########################################
+                node_uid, node_label = get_node_info(node)
+                dot.node(node_uid, label=node_label, shape='record')
+                dot.edge(func_uid, node_uid)
+
+        #######################################
 
         return dot
 
