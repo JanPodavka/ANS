@@ -63,7 +63,7 @@ class Variable:
     def __mul__(self, other: 'Variable') -> 'Variable':
         ########################################
         def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-            return dout.clone() * other.data.clone(), dout.clone() * self.data.clone()
+            return dout.clone() * other.data, dout.clone() * self.data
 
         return Variable(
             self.data * other.data,
@@ -75,7 +75,7 @@ class Variable:
     def __pow__(self, power, modulo=None):
         ########################################
         def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor,]:
-            return power * (self.data.clone() ** (power - 1)) * dout.clone(),
+            return power * (self.data ** (power - 1)) * dout.clone(),
 
         return Variable(
             self.data ** power,
@@ -121,7 +121,7 @@ class Variable:
                 grad = node.grad_fn(node.grad)
                 for i, parent in enumerate(node.parents):
                     if parent.grad is not None:
-                        parent.grad += grad[i]
+                        parent.grad += grad[i] # acumulation of gradients
                     else:
                         parent.grad = grad[i]
         ########################################

@@ -86,18 +86,19 @@ class ANSTestCase(unittest.TestCase):
 
     def assertTensorsClose(
             self,
-            actual: torch.Tensor,
-            expected: torch.Tensor,
+            actual: Union[float, torch.Tensor],
+            expected: Union[float, torch.Tensor],
             rtol: float = 1e-3,
-            atol: float = 1e-4
+            atol: float = 1e-4,
+            msg: str = ""
     ) -> None:
         try:
-            msg = ""
+            err_str = ""
             torch.testing.assert_close(actual, expected, rtol=rtol, atol=atol)
         except AssertionError as e:
-            msg = f"{e}\n"
+            err_str = f"{e}\n"
             if self.params.get('verbose', True):
-                msg += f"\nActual\n{actual}\n"
-                msg += f"\nExpected\n{expected}\n"
-        if msg:
-            self.fail(msg=msg)
+                err_str += f"\nActual\n{actual}\n"
+                err_str += f"\nExpected\n{expected}\n"
+        if err_str:
+            self.fail(msg=f"{msg}\n{err_str}")
