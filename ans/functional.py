@@ -1,5 +1,5 @@
 import functools
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import torch
 
@@ -167,3 +167,206 @@ class SoftmaxCrossEntropy(Function):
         ########################################
 
         return dscores,
+
+
+class ReLU(Function):
+
+    @staticmethod
+    def forward(input: torch.Tensor) -> tuple[torch.Tensor, tuple]:
+        """
+        Args:
+            input: shape (num_samples, ...)
+        Returns:
+            output: shape (num_samples, ...)
+            cache: tuple of intermediate results to use in backward
+
+        Operation is not inplace, i.e. it does not modify the input.
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return output, cache
+
+    @staticmethod
+    def backward(doutput: torch.Tensor, cache=()) -> tuple[torch.Tensor, ...]:
+        """
+        Args:
+            doutput: gradient w.r.t. output of the forward pass; shape (num_samples, ...)
+            cache: cache from the forward pass
+        Returns:
+            tuple of gradients w.r.t. input (single-element tuple)
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return dinput,
+
+
+class Tanh(Function):
+
+    @staticmethod
+    def forward(input: torch.Tensor) -> tuple[torch.Tensor, tuple]:
+        """
+        Args:
+            input: shape (num_samples, ...)
+        Returns:
+            output: shape (num_samples, ...)
+            cache: tuple of intermediate results to use in backward
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return output, cache
+
+    @staticmethod
+    def backward(doutput: torch.Tensor, cache=()) -> tuple[torch.Tensor, ...]:
+        """
+        Args:
+            doutput: gradient w.r.t. output of the forward pass; shape (num_samples, ...)
+            cache: cache from the forward pass
+        Returns:
+            tuple of gradients w.r.t. input (single-element tuple)
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return dinput,
+
+
+class Dropout(Function):
+
+    @staticmethod
+    def forward(
+            input: torch.Tensor,
+            p: float = 0.5,
+            training: bool = False,
+            seed: Optional[int] = None
+    ) -> tuple[torch.Tensor, tuple]:
+        """
+        Args:
+            input: shape (num_samples, ...)
+            p: probability of element being zeroed out
+            training: whether in training mode or eval mode
+            seed: enable deterministic behavior (useful for gradient check)
+        Returns:
+            output: shape (num_samples, ...)
+            cache: tuple of intermediate results to use in backward
+        """
+
+        # deterministic behavior for gradient check
+        if seed is not None:
+            torch.manual_seed(seed)
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return output, cache
+
+    @staticmethod
+    def backward(doutput: torch.Tensor, cache=()) -> tuple[torch.Tensor, ...]:
+        """
+        Args:
+            doutput: gradient w.r.t. output of the forward pass; shape (num_samples, ...)
+            cache: cache from the forward pass
+        Returns:
+            tuple of gradients w.r.t. input (single-element tuple)
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return dinput,
+
+
+class BatchNorm1d(Function):
+
+    @staticmethod
+    def forward(
+            input: torch.Tensor,
+            gamma: Optional[torch.Tensor],
+            beta: Optional[torch.Tensor],
+            running_mean: Optional[torch.Tensor] = None,
+            running_var: Optional[torch.Tensor] = None,
+            momentum: float = 0.9,
+            eps: float = 1e-05,
+            training: bool = False
+    ) -> tuple[torch.Tensor, tuple]:
+        """
+
+        Args:
+            input: shape (num_samples, num_features)
+            gamma: shape (num_features,)
+            beta: shape (num_features,)
+            running_mean: shape (num_features,)
+            running_var: shape (num_features,)
+            momentum: running average smoothing coefficient
+            eps: for numerical stabilization
+            training: whether in training mode or eval mode
+        Returns:
+            output: shape (num_samples, num_features)
+            cache: tuple of intermediate results to use in backward
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return output, cache
+
+    @staticmethod
+    def backward(doutput: torch.Tensor, cache=()) -> tuple[torch.Tensor, ...]:
+        """
+        Args:
+            doutput: gradient w.r.t. output of the forward pass; shape (num_samples, ...)
+            cache: cache from the forward pass
+        Returns:
+            tuple of gradients w.r.t. input (single-element tuple)
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return dinput, dgamma, dbeta
