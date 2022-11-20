@@ -1,3 +1,4 @@
+import math
 from typing import Any, Optional
 
 import torch
@@ -67,6 +68,7 @@ class Module:
             elif isinstance(obj, Module):
                 for attr in dir(obj):
                     to(getattr(obj, attr))
+
         to(self)
         return self
 
@@ -87,23 +89,17 @@ class Linear(Module):
 
     def __init__(self, num_in: int, num_out: int) -> None:
         super().__init__()
-
         ########################################
-        # TODO: initialize weight and bias
-
-        self.weight = ...
-        self.bias = ...
-
-        # ENDTODO
+        i = 1 / math.sqrt(num_in)
+        self.weight = torch.Tensor(num_in, num_out).uniform_(-i, i)
+        self.bias = torch.zeros(num_out)
         ########################################
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
 
-        ...
+        return ans.functional.Linear.apply(x,self.weight,self.bias)
 
-        # ENDTODO
         ########################################
 
 
@@ -114,11 +110,9 @@ class Sigmoid(Module):
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
 
-        ...
+        return ans.functional.Sigmoid.apply(x)
 
-        # ENDTODO
         ########################################
 
 
@@ -129,11 +123,7 @@ class SoftmaxCrossEntropy(Module):
 
     def forward(self, x: Variable, y: torch.Tensor) -> Variable:
         ########################################
-        # TODO: implement
-
-        ...
-
-        # ENDTODO
+        return ans.functional.SoftmaxCrossEntropy.apply(x,y)
         ########################################
 
 

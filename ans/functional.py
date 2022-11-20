@@ -12,9 +12,11 @@ class Function:
     def apply(cls, *inputs: Union[torch.Tensor, Variable], **params: Any) -> Variable:
         tensor_args = [i.data if isinstance(i, Variable) else i for i in inputs]
         output_data, cache = cls.forward(*tensor_args, **params)
+
         def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor, ...]:
             dinputs = cls.backward(dout, cache=cache)
             return tuple(dinputs[i] for i, inp in enumerate(inputs) if isinstance(inp, Variable))
+
         grad_fn.name = f"{cls.__name__}.backward"
         return Variable(
             output_data,
@@ -52,11 +54,11 @@ class Linear(Function):
         """
 
         ########################################
-        # TODO: implement
+
+        output = input @ weight + bias
+        cache = (input, weight)
 
 
-
-        # ENDTODO
         ########################################
 
         return output, cache
@@ -72,11 +74,12 @@ class Linear(Function):
         """
 
         ########################################
-        # TODO: implement
+
+        dinput = doutput @ cache[1].T
+        dweight = cache[0].T @ doutput
+        dbias = torch.sum(doutput,dim = 0)
 
 
-
-        # ENDTODO
         ########################################
 
         return dinput, dweight, dbias
@@ -95,11 +98,8 @@ class Sigmoid(Function):
         """
 
         ########################################
-        # TODO: implement
-
-
-
-        # ENDTODO
+        output = 1 / (1 + torch.exp(-input))
+        cache = (output,)
         ########################################
 
         return output, cache
@@ -115,11 +115,7 @@ class Sigmoid(Function):
         """
 
         ########################################
-        # TODO: implement
-
-
-
-        # ENDTODO
+        dinput = doutput * cache[0] * (1-cache[0])
         ########################################
 
         return dinput,
@@ -139,11 +135,9 @@ class SoftmaxCrossEntropy(Function):
         """
 
         ########################################
-        # TODO: implement
-
-
-
-        # ENDTODO
+        ln = - scores[torch.arange(scores.shape[0]), targets] + torch.log(torch.sum(torch.exp(scores), dim=1))
+        output = torch.mean(ln)
+        cache = (scores, targets)
         ########################################
 
         return output, cache
@@ -159,14 +153,12 @@ class SoftmaxCrossEntropy(Function):
         """
 
         ########################################
-        # TODO: implement
-
-
-
-        # ENDTODO
+        dscores = torch.exp(cache[0]) / torch.sum(torch.exp(cache[0]), dim=1)[:, None]
+        dscores[torch.arange(cache[0].shape[0]), cache[1]] -= 1
+        dscores /= cache[0].shape[0]
         ########################################
 
-        return dscores,
+        return dscores * doutput,
 
 
 class ReLU(Function):
