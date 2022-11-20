@@ -58,7 +58,6 @@ class Linear(Function):
         output = input @ weight + bias
         cache = (input, weight)
 
-
         ########################################
 
         return output, cache
@@ -77,8 +76,7 @@ class Linear(Function):
 
         dinput = doutput @ cache[1].T
         dweight = cache[0].T @ doutput
-        dbias = torch.sum(doutput,dim = 0)
-
+        dbias = torch.sum(doutput, dim=0)
 
         ########################################
 
@@ -115,7 +113,7 @@ class Sigmoid(Function):
         """
 
         ########################################
-        dinput = doutput * cache[0] * (1-cache[0])
+        dinput = doutput * cache[0] * (1 - cache[0])
         ########################################
 
         return dinput,
@@ -135,6 +133,7 @@ class SoftmaxCrossEntropy(Function):
         """
 
         ########################################
+        scores = (scores.T - torch.max(scores, dim=1)[0]).T  # norm : sub row max from scores (Reshape for broadcast)
         ln = - scores[torch.arange(scores.shape[0]), targets] + torch.log(torch.sum(torch.exp(scores), dim=1))
         output = torch.mean(ln)
         cache = (scores, targets)
