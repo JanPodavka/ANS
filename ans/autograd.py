@@ -136,13 +136,11 @@ class Variable:
             """
             Auxiliary function for graphviz Digraph creation to display a computation graph history of some Variable.
             Function automatically determines unique identifier and label for any node that is represented by a Variable object.
-
             Args:
                 node: Variable object
                 default_name: Name that will be displayed if automatic name determination from Variable inspection fails
                 show_data: Whether to include Variable's data and grad as string in returned label
                 stack_offset: Magic argument to inspect. If name determination fails, try setting this to 1 or 3.
-
             Returns:
                 node_uid: Unique identifier of node
                 node_label: Text caption of the node to be displayed as label in some graphviz.Digraph
@@ -165,27 +163,24 @@ class Variable:
                     node_label += f" | grad = {node.grad.item():.3f}"
             return node_uid, node_label
 
-        def get_func_info(node: 'Variable') -> tuple[str, str]:
+        def get_func_info(node:'Variable') -> tuple[str, str]:
             """
             The function is analogous to get_node_info, but used for graph nodes that represent operations such as summation or
             multiplication. Automatically determines unique identifier and display label.
             It will check input node's grad_fn attribute and infer the operation name of which the node is a result.
             Args:
                 node: Variable object
-
             Returns:
                 func_uid: Unique identifier of node
                 func_label: Text caption of the node to be displayed as label in some graphviz.Digraph
             """
             func_uid = str(id(node)) + '.grad_fn'
             if hasattr(node.grad_fn, 'name'):
-                func_label = node.grad_fn.name.removesuffix('.backward')
+                func_label = node.grad_fn.name.removesuffix('.backward')  # coming from Function.apply
             else:
-                func_label = re.search('__(\w+)__', node.grad_fn.__qualname__).group(1)
+                func_label = re.search('__(\w+)__', node.grad_fn.__qualname__).group(1)  # coming from Variable.__*__
             return func_uid, func_label
 
-        if show_data:
-            torch.set_printoptions(profile='short', threshold=6, edgeitems=1)
         dot = graphviz.Digraph(graph_attr={'rankdir': 'LR'})
 
         #######################################
@@ -208,6 +203,8 @@ class Variable:
         #######################################
 
         return dot
+
+
 
 
 def numeric_gradient(
@@ -250,7 +247,8 @@ def gradcheck(
     # Analytic gradients
     output = func(*inputs, **params)
     for input in inputs:
-        input.grad = None
+        if isinstance(input, Variable):
+            input.grad = None
     if dout is None:
         dout = torch.randn_like(output.data)
     output.backprop(dout=dout)
@@ -272,7 +270,6 @@ def gradcheck(
             if passes:
                 print(f"d{input_name} ok: rel_err={rel_err.max().item():.3e}, abs_err={abs_err.max().item():.3e}")
             else:
-                torch.set_printoptions(threshold=40, linewidth=160, sci_mode=False)
                 print(f"\033[31md{input_name} FAIL: "  # begin red color
                       f"rel_err={rel_err.max().item():.3e}, abs_err={abs_err.max().item():.3e}\n")
                 print('Analytic gradient: ')
@@ -282,7 +279,6 @@ def gradcheck(
                 print('Relative error: ')
                 print(rel_err)
                 print('\033[30m')  # end red color
-                torch.set_printoptions(profile='default')
 
     return ok
 

@@ -68,7 +68,6 @@ class Module:
             elif isinstance(obj, Module):
                 for attr in dir(obj):
                     to(getattr(obj, attr))
-
         to(self)
         return self
 
@@ -91,13 +90,12 @@ class Linear(Module):
         super().__init__()
         ########################################
         i = 1 / math.sqrt(num_in)
-        self.weight = torch.Tensor(num_in, num_out).uniform_(-i, i)
-        self.bias = torch.zeros(num_out)
+        self.weight = Variable((2 * i) * torch.rand(num_in, num_out) - i)
+        self.bias = Variable(torch.zeros(num_out))
         ########################################
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-
         return ans.functional.Linear.apply(x,self.weight,self.bias)
 
         ########################################

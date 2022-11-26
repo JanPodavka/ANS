@@ -103,10 +103,13 @@ class TestLinearModule(ANSTestCase):
             [-0.3311, -0.2064,  0.3039,  0.1578,  0.1714]
         ])
         expected_bias = torch.tensor([0., 0., 0., 0., 0.])
+        self.assertIsInstance(linear.weight, ans.autograd.Variable)
+        self.assertIsInstance(linear.bias, ans.autograd.Variable)
         self.assertTensorsClose(linear.weight.data, expected_weight)
         self.assertTensorsClose(linear.bias.data, expected_bias)
 
     def test_implementaiton(self):
+        self.assertCalling(ans.modules.Linear.__init__, ['rand', 'zeros'])
         self.assertCalling(ans.modules.Linear.forward, ['apply'])
 
     def test_forward(self):
