@@ -27,8 +27,8 @@ class TestBatchLoader(ANSTestCase):
         xb, yb = next(iter(loader))
         self.assertTupleEqual(xb.shape, self.x.shape)
         self.assertTupleEqual(yb.shape, self.y.shape)
-        torch.testing.assert_allclose(xb, self.x)
-        torch.testing.assert_allclose(yb, self.y)
+        self.assertTensorsClose(xb, self.x)
+        self.assertTensorsClose(yb, self.y)
 
     def test_batch_size_even(self) -> None:
         batch_size = 2
@@ -58,8 +58,8 @@ class TestBatchLoader(ANSTestCase):
         xb, yb = next(iter(loader))
         self.assertFalse(torch.all(xb == self.x))
         self.assertFalse(torch.all(yb == self.y))
-        torch.testing.assert_allclose(xb, self.x[xb[:, 0]])
-        torch.testing.assert_allclose(yb, self.y[xb[:, 0]])
+        self.assertTensorsClose(xb, self.x[xb[:, 0]])
+        self.assertTensorsClose(yb, self.y[xb[:, 0]])
 
 
 class TestPreprocess(ANSTestCase):
@@ -70,7 +70,7 @@ class TestPreprocess(ANSTestCase):
             [0.0000, 0.0039, 0.0078, 0.0118, 0.0157, 0.0196, 0.0235, 0.0275, 0.0314, 0.0353, 0.0392, 0.0431],
             [0.0471, 0.0510, 0.0549, 0.0588, 0.0627, 0.0667, 0.0706, 0.0745, 0.0784, 0.0824, 0.0863, 0.0902]
         ])
-        torch.testing.assert_allclose(x, expected_x, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(x, expected_x)
 
 
 class TestInit(ANSTestCase):
@@ -84,8 +84,8 @@ class TestInit(ANSTestCase):
         ])
         expected_bias = torch.tensor([0., 0.])
         weight, bias = self.params['init_params_fn'](3, 2, multiplier=1e-2)
-        torch.testing.assert_allclose(weight, expected_weight, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(bias.squeeze(), expected_bias, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(weight, expected_weight)
+        self.assertTensorsClose(bias.squeeze(), expected_bias)
         if len(bias.shape) > 1:
             self.assertLessEqual(len(bias.shape), 2)
             self.assertGreaterEqual(bias.shape[1], bias.shape[0])
@@ -101,7 +101,7 @@ class TestCalcLinearScores(ANSTestCase):
         x, w, b = torch.randn(5, 3), torch.randn(3, 2), torch.randn(2)
         scores = self.params['calc_linear_scores_fn'](x, w, b)
         expected_scores = torch.nn.functional.linear(x, w.t(), b)
-        torch.testing.assert_allclose(scores, expected_scores, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(scores, expected_scores)
 
 
 class TestSoftmaxCrossEntropy(ANSTestCase):
@@ -116,7 +116,7 @@ class TestSoftmaxCrossEntropy(ANSTestCase):
         targets = torch.randint(0, 8, (4, 1)).squeeze()
         loss = self.params['softmax_cross_entropy_fn'](probs, targets)
         expected_loss = torch.nn.functional.cross_entropy(probs, targets, reduction='mean')
-        torch.testing.assert_allclose(loss, expected_loss, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(loss, expected_loss)
 
 
 class TestAccuracy(ANSTestCase):
@@ -125,13 +125,13 @@ class TestAccuracy(ANSTestCase):
         self.assertNotCalling(self.params['accuracy_fn'], ['accuracy'])
         self.assertNoLoops(self.params['accuracy_fn'])
 
-    def test_cross_entropy(self):
+    def test_accuracy(self):
         ans.utils.seed_everything(0)
         probs = torch.rand(19, 5)
         targets = torch.randint(0, 5, (19, 1)).squeeze()
         acc = self.params['accuracy_fn'](probs, targets)
         expected_acc = torch.tensor(0.2105)
-        torch.testing.assert_allclose(acc, expected_acc, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(acc, expected_acc)
 
 
 class TestSoftmaxCrossEntropyGradients(ANSTestCase):
@@ -149,11 +149,9 @@ class TestSoftmaxCrossEntropyGradients(ANSTestCase):
         loss.backward()
         expected_dweight = weight.grad
         expected_dbias = bias.grad
-        print(expected_dbias,expected_dweight)
-
         dweight, dbias = self.params['softmax_cross_entropy_gradients_fn'](inputs, logits, targets)
-        torch.testing.assert_allclose(dweight, expected_dweight, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(dbias, expected_dbias, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(dweight, expected_dweight)
+        self.assertTensorsClose(dbias, expected_dbias)
 
 
 class TestUpdateParamInplace(ANSTestCase):
@@ -174,7 +172,7 @@ class TestUpdateParamInplace(ANSTestCase):
             [-0.4047, -0.6058,  0.1914],
             [-0.8509,  1.1008, -1.0660]
         ])
-        torch.testing.assert_allclose(weight, expected_weight, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(weight, expected_weight)
 
 
 class TestTrainStepSoftmax(ANSTestCase):
@@ -204,10 +202,10 @@ class TestTrainStepSoftmax(ANSTestCase):
             [-1.0886, -0.2666, 0.1894]
         ])
         expected_bias = torch.tensor([-0.2174,  2.0533, -0.0328])
-        torch.testing.assert_allclose(loss, expected_loss, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(acc, expected_acc, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(weight, expected_weight, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(bias, expected_bias, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(loss, expected_loss)
+        self.assertTensorsClose(acc, expected_acc)
+        self.assertTensorsClose(weight, expected_weight)
+        self.assertTensorsClose(bias, expected_bias)
 
 
 class TestValStep(ANSTestCase):
@@ -228,8 +226,8 @@ class TestValStep(ANSTestCase):
         bias = torch.randn(3)
         loss, acc = self.params['val_step_fn'](inputs, targets, weight, bias, self.params['loss_fn'])
         expected_loss, expected_acc = 1.5571, 0.375
-        torch.testing.assert_allclose(loss, expected_loss, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(acc, expected_acc, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(loss, expected_loss)
+        self.assertTensorsClose(acc, expected_acc)
 
 
 class TestHingeLoss(ANSTestCase):
@@ -245,7 +243,7 @@ class TestHingeLoss(ANSTestCase):
         targets = torch.randint(0, 5, (8, 1)).squeeze()
         loss = self.params['hinge_loss_fn'](scores, targets)
         expected_loss = scores.shape[1] * torch.nn.functional.multi_margin_loss(scores, targets, reduction='mean')
-        torch.testing.assert_allclose(loss, expected_loss, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(loss, expected_loss)
 
 
 class TestHingeLossGradients(ANSTestCase):
@@ -260,8 +258,8 @@ class TestHingeLossGradients(ANSTestCase):
         loss.backward()
         dweight, dbias = self.params['hinge_loss_gradients_fn'](inputs, scores, targets)
         expected_dweight, expected_dbias = weight.grad, bias.grad
-        torch.testing.assert_allclose(dweight, expected_dweight, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(dbias, expected_dbias, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(dweight, expected_dweight)
+        self.assertTensorsClose(dbias, expected_dbias)
 
 
 class TestTrainStepSVM(ANSTestCase):
@@ -291,7 +289,7 @@ class TestTrainStepSVM(ANSTestCase):
             [-1.0886, -0.2666,  0.1894]
         ])
         expected_bias = torch.tensor([-0.2178,  2.0515, -0.0306])
-        torch.testing.assert_allclose(loss, expected_loss, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(acc, expected_acc, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(weight, expected_weight, rtol=1e-3, atol=1e-4)
-        torch.testing.assert_allclose(bias, expected_bias, rtol=1e-3, atol=1e-4)
+        self.assertTensorsClose(loss, expected_loss)
+        self.assertTensorsClose(acc, expected_acc)
+        self.assertTensorsClose(weight, expected_weight)
+        self.assertTensorsClose(bias, expected_bias)
