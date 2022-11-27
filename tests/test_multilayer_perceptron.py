@@ -72,11 +72,14 @@ class TestSGD(ANSTestCase):
 class TestPreprocess(ANSTestCase):
 
     def test_values(self) -> None:
-        x, y = self.params['preprocess_fn'](torch.arange(2 * 3 * 2 * 2).reshape(2, 3, 2, 2), torch.randint(10, (2,)))
+        x, y = self.params['preprocess_fn'](torch.arange(2 * 3 * 2 * 2).reshape(2, 3, 2, 2),
+                                            torch.randint(10, (2,)), centered=self.params.get('centered'))
         if self.params.get('centered', False):
             expected_x = torch.tensor([
-                [-0.5000, -0.4961, -0.4922, -0.4882, -0.4843, -0.4804, -0.4765, -0.4725, -0.4686, -0.4647, -0.4608, -0.4569],
-                [-0.4529, -0.4490, -0.4451, -0.4412, -0.4373, -0.4333, -0.4294, -0.4255, -0.4216, -0.4176, -0.4137, -0.4098]])
+                [-0.5000, -0.4961, -0.4922, -0.4882, -0.4843, -0.4804, -0.4765, -0.4725, -0.4686, -0.4647, -0.4608,
+                 -0.4569],
+                [-0.4529, -0.4490, -0.4451, -0.4412, -0.4373, -0.4333, -0.4294, -0.4255, -0.4216, -0.4176, -0.4137,
+                 -0.4098]])
         else:
             expected_x = torch.tensor([
                 [0.0000, 0.0039, 0.0078, 0.0118, 0.0157, 0.0196, 0.0235, 0.0275, 0.0314, 0.0353, 0.0392, 0.0431],
@@ -224,7 +227,7 @@ class TestBatchNorm1d(ANSTestCase):
         for i, training in enumerate([True, True, False]):
             z_var = ans.functional.BatchNorm1d.apply(x_var, gamma, beta, **params, training=training)
             z = torch.nn.functional.batch_norm(x_var.data, torch_running_mean, torch_running_var, gamma.data,
-                                               beta.data, training=training, momentum=1-params['momentum'],
+                                               beta.data, training=training, momentum=1 - params['momentum'],
                                                eps=params['eps'])
             self.assertTensorsClose(params['running_mean'].data, torch_running_mean, msg=f"training[{i}]={training}")
             self.assertTensorsClose(params['running_var'].data, torch_running_var, msg=f"training[{i}]={training}")
@@ -238,7 +241,7 @@ class TestBatchNorm1d(ANSTestCase):
         for i, training in enumerate([True, True, False]):
             z_var = ans.functional.BatchNorm1d.apply(x_var, None, None, **params, training=training)
             z = torch.nn.functional.batch_norm(x_var.data, torch_running_mean, torch_running_var, None, None,
-                                               training=training, momentum=1-params['momentum'], eps=params['eps'])
+                                               training=training, momentum=1 - params['momentum'], eps=params['eps'])
             self.assertTensorsClose(params['running_mean'].data, torch_running_mean, msg=f"training[{i}]={training}")
             self.assertTensorsClose(params['running_var'].data, torch_running_var, msg=f"training[{i}]={training}")
             self.assertTensorsClose(z_var.data, z, msg=f"training[{i}]={training}")
@@ -321,7 +324,6 @@ class TestDropout(ANSTestCase):
                 verbose=False
             )
             self.assertTrue(gradcheck_result, msg=f"training={training}")
-
 
 
 class TestAdam(ANSTestCase):
