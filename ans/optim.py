@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 from ans.autograd import Variable
@@ -32,20 +33,24 @@ class SGD(Optimizer):
         self.weight_decay = weight_decay
 
         ########################################
-        # TODO: init _velocities to zeros
 
-        self._velocities: dict[Variable, torch.Tensor] = ...
+        self._velocities: dict[Variable, torch.Tensor] = \
+            dict(zip(parameters, len(parameters) * [torch.Tensor(0).to(dtype=torch.float16)]))
 
-        # ENDTODO
         ########################################
 
     def step(self) -> None:
         ########################################
-        # TODO: implement
+        for par in self.parameters:
+            if par.grad is not None:
+                theta = par.grad + (self.weight_decay * par.data)
+                if self.momentum != 0 and not torch.all(self._velocities[par] == 0):  # if momentum or vel is not 0
+                    self._velocities[par] = (self.momentum * self._velocities[par]) - self.learning_rate * theta
+                else:
+                    self._velocities[par] = - self.learning_rate * theta
 
-        raise NotImplementedError
+                par.data += self._velocities[par]
 
-        # ENDTODO
         ########################################
 
 
