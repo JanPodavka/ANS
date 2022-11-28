@@ -175,11 +175,9 @@ class ReLU(Function):
         """
 
         ########################################
-        # TODO: implement
 
-        raise NotImplementedError
-
-        # ENDTODO
+        output = torch.where(input > 0, input, 0)
+        cache = output,
         ########################################
 
         return output, cache
@@ -195,11 +193,9 @@ class ReLU(Function):
         """
 
         ########################################
-        # TODO: implement
 
-        raise NotImplementedError
+        dinput = torch.where(cache[0] > 0, doutput, 0)
 
-        # ENDTODO
         ########################################
 
         return dinput,

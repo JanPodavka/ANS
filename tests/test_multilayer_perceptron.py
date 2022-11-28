@@ -73,7 +73,7 @@ class TestPreprocess(ANSTestCase):
 
     def test_values(self) -> None:
         x, y = self.params['preprocess_fn'](torch.arange(2 * 3 * 2 * 2).reshape(2, 3, 2, 2),
-                                            torch.randint(10, (2,)), centered=self.params.get('centered'))
+                                            torch.randint(10, (2,)))
         if self.params.get('centered', False):
             expected_x = torch.tensor([
                 [-0.5000, -0.4961, -0.4922, -0.4882, -0.4843, -0.4804, -0.4765, -0.4725, -0.4686, -0.4647, -0.4608,
