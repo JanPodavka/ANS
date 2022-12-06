@@ -35,7 +35,7 @@ class SGD(Optimizer):
         ########################################
 
         self._velocities: dict[Variable, torch.Tensor] = \
-            dict(zip(parameters, len(parameters) * [torch.Tensor(0).to(dtype=torch.float16)]))
+            dict(zip(parameters, len(parameters) * [torch.zeros(1).to(dtype=torch.float16)]))
 
         ########################################
 
@@ -44,11 +44,7 @@ class SGD(Optimizer):
         for par in self.parameters:
             if par.grad is not None:
                 theta = par.grad + (self.weight_decay * par.data)
-                if self.momentum != 0 and not torch.all(self._velocities[par] == 0):  # if momentum or vel is not 0
-                    self._velocities[par] = (self.momentum * self._velocities[par]) - self.learning_rate * theta
-                else:
-                    self._velocities[par] = - self.learning_rate * theta
-
+                self._velocities[par] = (self.momentum * self._velocities[par]) - self.learning_rate * theta
                 par.data += self._velocities[par]
 
         ########################################
@@ -73,20 +69,25 @@ class Adam(Optimizer):
         self.eps = eps
 
         ########################################
-        # TODO: init _num_steps to zero, _m to zeros, _v to zeros
 
-        self._num_steps = ...
-        self._m: dict[Variable, torch.Tensor] = ...
-        self._v: dict[Variable, torch.Tensor] = ...
+        self._num_steps = torch.zeros(1)
+        self._m: dict[Variable, torch.Tensor] = dict(zip(parameters, len(parameters) *
+                                                         [torch.zeros(1).to(dtype=torch.float16)]))
+        self._v: dict[Variable, torch.Tensor] = dict(zip(parameters, len(parameters) *
+                                                         [torch.zeros(1).to(dtype=torch.float16)]))
 
-        # ENDTODO
         ########################################
 
     def step(self) -> None:
         ########################################
-        # TODO: implement
+        self._num_steps += 1
+        for par in self.parameters:
+            if par.grad is not None:
+                theta = par.grad + (self.weight_decay * par.data)
+                self._m[par] = (self.beta1 * self._m[par]) + (1 - self.beta1) * theta
+                self._v[par] = (self.beta2 * self._v[par]) + (1 - self.beta2) * (theta ** 2)
+                mt = self._m[par] / (1 - self.beta1**self._num_steps)
+                vt = self._v[par] / (1 - self.beta2**self._num_steps)
 
-        raise NotImplementedError
-
-        # ENDTODO
+                par.data += -self.learning_rate * mt / (torch.sqrt(vt) + self.eps)
         ########################################

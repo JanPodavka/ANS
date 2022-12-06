@@ -175,9 +175,8 @@ class ReLU(Function):
         """
 
         ########################################
-
         output = torch.where(input > 0, input, 0)
-        cache = output,
+        cache = input,
         ########################################
 
         return output, cache
@@ -234,11 +233,9 @@ class Tanh(Function):
         """
 
         ########################################
-        # TODO: implement
 
         raise NotImplementedError
 
-        # ENDTODO
         ########################################
 
         return dinput,
@@ -263,17 +260,17 @@ class Dropout(Function):
             output: shape (num_samples, ...)
             cache: tuple of intermediate results to use in backward
         """
-
         # deterministic behavior for gradient check
         if seed is not None:
             torch.manual_seed(seed)
 
+        m = torch.rand(input.shape[0], input.shape[1]) < p
         ########################################
-        # TODO: implement
-
-        raise NotImplementedError
-
-        # ENDTODO
+        if training:
+            output = torch.where(m, 0, input / (1 - p))
+        else:
+            output = input.clone()
+        cache = (m, p, training)
         ########################################
 
         return output, cache
@@ -289,13 +286,12 @@ class Dropout(Function):
         """
 
         ########################################
-        # TODO: implement
-
-        raise NotImplementedError
-
-        # ENDTODO
+        m, p, training = cache
+        if training:
+            dinput = torch.where(m > p, 0, doutput/(1-p))
+        else:
+            dinput = doutput.clone()
         ########################################
-
         return dinput,
 
 
@@ -329,11 +325,32 @@ class BatchNorm1d(Function):
         """
 
         ########################################
-        # TODO: implement
+        if training:
+            # find the params of the batch size
+            mi = torch.mean(input, dim=0)
+            sigma2 = torch.var(input, dim=0, unbiased=False)
 
-        raise NotImplementedError
+            ## acum running params inplace operation
+            n = input.shape[0]
+            ## if none ...
+            if running_mean is not None or running_var is not None:
+                running_mean[:] = (running_mean * momentum) + (1 - momentum) * mi
+                running_var[:] = (running_var * momentum) + (1 - momentum) * (n / (n - 1) * sigma2)
 
-        # ENDTODO
+            ## get output
+            x1 = (input - mi[None, :]) / torch.sqrt(sigma2[None, :] + eps)
+
+        else:  ## Test
+            x1 = (input - running_mean[None, :]) / torch.sqrt(running_var[None, :] + eps)
+            mean = running_mean
+            sigma2 = running_var
+        if gamma is None or beta is None:
+            output = x1
+        else:
+            output = (gamma * x1) + beta
+
+        cache = x1, gamma, training, sigma2, eps
+
         ########################################
 
         return output, cache
@@ -347,13 +364,21 @@ class BatchNorm1d(Function):
         Returns:
             tuple of gradients w.r.t. input (single-element tuple)
         """
-
         ########################################
-        # TODO: implement
+        xn, gamma, training, sigma2, eps = cache
+        const = gamma / (torch.sqrt(sigma2 + eps))
 
-        raise NotImplementedError
+        if training:
+            dinput = const * (
+                    doutput - torch.mean(doutput, dim=0) - ((1 / doutput.shape[0]) * xn) * torch.sum(doutput * xn,
+                                                                                                     dim=0)
+            )
+        else:
+            dinput = const * doutput
 
-        # ENDTODO
+        dgamma = torch.sum(doutput * xn, dim=0)
+        dbeta = torch.sum(doutput, dim=0)
+
         ########################################
 
         return dinput, dgamma, dbeta

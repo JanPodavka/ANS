@@ -229,6 +229,8 @@ class TestBatchNorm1d(ANSTestCase):
             z = torch.nn.functional.batch_norm(x_var.data, torch_running_mean, torch_running_var, gamma.data,
                                                beta.data, training=training, momentum=1 - params['momentum'],
                                                eps=params['eps'])
+
+
             self.assertTensorsClose(params['running_mean'].data, torch_running_mean, msg=f"training[{i}]={training}")
             self.assertTensorsClose(params['running_var'].data, torch_running_var, msg=f"training[{i}]={training}")
             self.assertTensorsClose(z_var.data, z, msg=f"training[{i}]={training}")
@@ -242,6 +244,7 @@ class TestBatchNorm1d(ANSTestCase):
             z_var = ans.functional.BatchNorm1d.apply(x_var, None, None, **params, training=training)
             z = torch.nn.functional.batch_norm(x_var.data, torch_running_mean, torch_running_var, None, None,
                                                training=training, momentum=1 - params['momentum'], eps=params['eps'])
+
             self.assertTensorsClose(params['running_mean'].data, torch_running_mean, msg=f"training[{i}]={training}")
             self.assertTensorsClose(params['running_var'].data, torch_running_var, msg=f"training[{i}]={training}")
             self.assertTensorsClose(z_var.data, z, msg=f"training[{i}]={training}")
@@ -252,6 +255,15 @@ class TestBatchNorm1d(ANSTestCase):
         ans_batchnorm = ans.modules.BatchNorm1d(7, momentum=momentum, eps=eps).to(dtype=torch.float64)
         torch_batchnorm = torch.nn.BatchNorm1d(7, eps=eps, momentum=1. - momentum, dtype=torch.float64)
 
+        # print("gamma")
+        # print(ans_batchnorm.gamma.data, torch_batchnorm.weight)
+        # print("beta")
+        # print(ans_batchnorm.beta.data, torch_batchnorm.bias)
+        # print("rm")
+        # print(ans_batchnorm.running_mean, torch_batchnorm.running_mean)
+        # print("rv")
+        # print(ans_batchnorm.running_var, torch_batchnorm.running_var)
+
         self.assertTensorsClose(ans_batchnorm.gamma.data, torch_batchnorm.weight)
         self.assertTensorsClose(ans_batchnorm.beta.data, torch_batchnorm.bias)
         self.assertTensorsClose(ans_batchnorm.running_mean, torch_batchnorm.running_mean)
@@ -261,7 +273,6 @@ class TestBatchNorm1d(ANSTestCase):
             x_var = randn_var(10, 7, mean=torch.randn(1).item(), std=torch.rand(1).item())
             z_var = ans_batchnorm(x_var)
             z = torch_batchnorm(x_var.data)
-
             self.assertIsInstance(z_var, ans.autograd.Variable)
             self.assertTensorsClose(z_var.data, z, msg=f"i={i}")
             self.assertTensorsClose(ans_batchnorm.running_mean, torch_batchnorm.running_mean)
@@ -316,7 +327,7 @@ class TestDropout(ANSTestCase):
         self.assertTensorsClose(null_ratio, torch.tensor(p).double(), rtol=1e-2, atol=1e-2)
 
     def test_gradcheck(self):
-        for training in [True, False]:
+        for training in [False, True]:
             gradcheck_result = ans.autograd.gradcheck(
                 ans.functional.Dropout.apply,
                 (randn_var(10, 4),),

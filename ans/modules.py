@@ -68,6 +68,7 @@ class Module:
             elif isinstance(obj, Module):
                 for attr in dir(obj):
                     to(getattr(obj, attr))
+
         to(self)
         return self
 
@@ -96,7 +97,7 @@ class Linear(Module):
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        return ans.functional.Linear.apply(x,self.weight,self.bias)
+        return ans.functional.Linear.apply(x, self.weight, self.bias)
 
         ########################################
 
@@ -121,7 +122,7 @@ class SoftmaxCrossEntropy(Module):
 
     def forward(self, x: Variable, y: torch.Tensor) -> Variable:
         ########################################
-        return ans.functional.SoftmaxCrossEntropy.apply(x,y)
+        return ans.functional.SoftmaxCrossEntropy.apply(x, y)
         ########################################
 
 
@@ -132,11 +133,9 @@ class ReLU(Module):
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
 
-        raise NotImplementedError
+        return ans.functional.ReLU.apply(x)
 
-        # ENDTODO
         ########################################
 
 
@@ -148,11 +147,9 @@ class Dropout(Module):
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
 
-        raise NotImplementedError
+        return ans.functional.Dropout().apply(x, p=self.p, training=self.training)
 
-        # ENDTODO
         ########################################
 
 
@@ -200,25 +197,25 @@ class BatchNorm1d(Module):
         self.affine = affine
 
         ########################################
-        # TODO: initialize gamma, beta, running_mean, running_var
-        # if affine, then gamma to ones (learnable), otherwise set to None
-        # if affine, then beta to zeros (learnable), otherwise set to None
-        # running_mean to zeros
-        # running_var to ones
 
-        self.gamma = ...
-        self.beta = ...
-        self.running_mean = ...
-        self.running_var = ...
+        self.gamma = torch.ones(num_features) if affine else None
+        self.beta = torch.zeros(num_features) if affine else None
+        self.running_mean = torch.zeros(num_features)
+        self.running_var = torch.ones(num_features)
 
-        # ENDTODO
         ########################################
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
 
-        raise NotImplementedError
+        return ans.functional.BatchNorm1d().apply(x,
+                                                  self.gamma,
+                                                  self.beta,
+                                                  self.running_mean,
+                                                  self.running_var,
+                                                  momentum=self.momentum,
+                                                  eps=self.eps,
+                                                  training=self.training
+                                                  )
 
-        # ENDTODO
         ########################################
