@@ -84,6 +84,15 @@ class Variable:
         )
         ########################################
 
+    def reshape(self, *shape: int) -> 'Variable':
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
     def predecessors(self) -> list['Variable']:
         """
 

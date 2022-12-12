@@ -9,7 +9,7 @@ from ans.autograd import Variable
 class Function:
 
     @classmethod
-    def apply(cls, *inputs: Union[torch.Tensor, Variable], **params: Any) -> Variable:
+    def apply(cls, *inputs: Union[Variable, Any], **params: Any) -> Variable:
         tensor_args = [i.data if isinstance(i, Variable) else i for i in inputs]
         output_data, cache = cls.forward(*tensor_args, **params)
 
@@ -382,3 +382,162 @@ class BatchNorm1d(Function):
         ########################################
 
         return dinput, dgamma, dbeta
+
+class BatchNorm2d(Function):
+
+    @staticmethod
+    def forward(
+            input: torch.Tensor,
+            gamma: Optional[torch.Tensor],
+            beta: Optional[torch.Tensor],
+            running_mean: Optional[torch.Tensor] = None,
+            running_var: Optional[torch.Tensor] = None,
+            momentum: float = 0.9,
+            eps: float = 1e-05,
+            training: bool = False
+    ) -> tuple[torch.Tensor, tuple]:
+        """
+        Spatial BatchNorm for convolutional networks
+        Args:
+            input: shape (num_samples, num_channels, height, width)
+            gamma: shape (num_channels,)
+            beta: shape (num_channels,)
+            running_mean: shape (num_channels,)
+            running_var: shape (num_channels,)
+            momentum: running average smoothing coefficient
+            eps: for numerical stabilization
+            training: whether in training mode or eval mode
+        Returns:
+            output: shape (num_samples, num_channels, height, width)
+            cache: tuple of intermediate results to use in backward
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return output, cache
+
+    @staticmethod
+    def backward(doutput: torch.Tensor, cache=()) -> tuple[torch.Tensor, ...]:
+        """
+        Args:
+            doutput: gradient w.r.t. output of the forward pass; shape (num_samples, num_channels, height, width)
+            cache: cache from the forward pass
+        Returns:
+            tuple of gradients w.r.t. input (single-element tuple)
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return dinput, dgamma, dbeta
+
+
+class Conv2d(Function):
+
+    @staticmethod
+    def forward(
+            input: torch.Tensor,
+            weight: torch.Tensor,
+            bias: Optional[torch.Tensor],
+            stride: int = 1,
+            padding: int = 0,
+            dilation: int = 1,
+            groups: int = 1
+    ) -> tuple[torch.Tensor, tuple]:
+        """
+        Args:
+            input: shape (num_samples, num_channels, height, width)
+            weight: shape (num_filters, num_channels, kernel_size[0], kernel_size[1])
+            bias: shape (num_filters,)
+            stride: convolution step size
+            padding: how much should the input be padded on each side by zeroes
+            dilation: see torch.nn.functional.conv2d
+            groups: see torch.nn.functional.conv2d
+        Returns:
+            output: shape (num_samples, num_filters, output_height, output_width)
+            cache: tuple of intermediate results to use in backward
+        """
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return output, cache
+
+    @staticmethod
+    def backward(doutput: torch.Tensor, cache=()) -> tuple[torch.Tensor, ...]:
+        """
+        Args:
+            doutput: gradient w.r.t. output of the forward pass; shape (num_samples, num_filters, output_height, output_width)
+            cache: cache from the forward pass
+        Returns:
+            tuple of gradients w.r.t. input, weight and bias
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return dinput, dweight, dbias
+
+
+class MaxPool2d(Function):
+
+    @staticmethod
+    def forward(input: torch.Tensor, window_size: int = 2) -> tuple[torch.Tensor, tuple]:
+        """
+        Args:
+            input: shape (num_samples, num_channels, height, width)
+            window_size: size of pooling window
+        Returns:
+            output: shape (num_samples, num_channels, height / window_size, width / window_size)
+            cache: tuple of intermediate results to use in backward
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return output, cache
+
+    @staticmethod
+    def backward(doutput: torch.Tensor, cache=()) -> tuple[torch.Tensor, ...]:
+        """
+        Args:
+            doutput: gradient w.r.t. output of the forward pass; shape (num_samples, num_channels, height / window_size, width / window_size)
+            cache: cache from the forward pass
+        Returns:
+            tuple of gradients w.r.t. input (single-element tuple)
+        """
+
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+        return dinput,

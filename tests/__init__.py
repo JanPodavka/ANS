@@ -82,7 +82,7 @@ class ANSTestCase(unittest.TestCase):
     def assertNoLoops(self, func: Callable) -> None:
         if any(
             isinstance(e, (ast.For, ast.While, ast.ListComp, ast.GeneratorExp))
-            for e in ast.walk(ast.parse(inspect.getsource(func)))
+            for e in ast.walk(ast.parse(self.get_source(func)))
         ):
             self.fail(msg=f"Manual loops are not allowed inside {func.__qualname__}")
 

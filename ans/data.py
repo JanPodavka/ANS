@@ -1,5 +1,5 @@
 import math
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Union
 
 import torch
 
@@ -54,3 +54,17 @@ class BatchLoader:
         return f"{self.__class__.__qualname__}:\n" \
                f"    num_batches: {len(self)}\n" \
                f"    batch_shape: {(self.batch_size,) + tuple(self.x.shape[1:])}\n"
+
+
+class DataLoader(torch.utils.data.DataLoader):
+    """
+    Hack to remove transferring of data to target device from training and inference logic
+    """
+
+    def __init__(self, *args, device: Union[str, torch.device] = 'cpu', **kwargs) -> None:
+        self.device = device
+        super().__init__(*args, **kwargs)
+
+    def __iter__(self):
+        for batch in super().__iter__():
+            yield tuple(tensor.to(self.device) for tensor in batch)

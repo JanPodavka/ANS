@@ -1,8 +1,7 @@
-import math
 from typing import Any, Optional
 
 import torch
-
+import math
 from ans.autograd import Variable
 import ans.functional
 
@@ -52,6 +51,9 @@ class Module:
     def parameters(self) -> list[Variable]:
         return [p for n, p in self.named_parameters()]
 
+    def num_params(self) -> int:
+        return sum(p.data.numel() for p in self.parameters())
+
     def to(self, dtype: Optional[torch.dtype] = None, device: Optional[str] = None) -> 'Module':
         def to(obj: Any) -> None:
             if isinstance(obj, torch.Tensor):
@@ -68,7 +70,6 @@ class Module:
             elif isinstance(obj, Module):
                 for attr in dir(obj):
                     to(getattr(obj, attr))
-
         to(self)
         return self
 
@@ -218,4 +219,127 @@ class BatchNorm1d(Module):
                                                   training=self.training
                                                   )
 
+        ########################################
+class BatchNorm1d(Module):
+
+    def __init__(
+            self,
+            num_features: int,
+            momentum: float = 0.9,
+            eps: float = 1e-5,
+            affine: bool = True
+    ) -> None:
+        super().__init__()
+
+        self.num_features = num_features
+        self.momentum = momentum
+        self.eps = eps
+        self.affine = affine
+
+        ########################################
+        # TODO: initialize gamma, beta, running_mean, running_var
+        # if affine, then gamma to ones (learnable), otherwise set to None
+        # if affine, then beta to zeros (learnable), otherwise set to None
+        # running_mean to zeros
+        # running_var to ones
+
+        self.gamma = ...
+        self.beta = ...
+        self.running_mean = ...
+        self.running_var = ...
+
+        # ENDTODO
+        ########################################
+
+    def forward(self, x: Variable) -> Variable:
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+
+class BatchNorm2d(BatchNorm1d):
+
+    def forward(self, x: Variable) -> Variable:
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+
+class Conv2d(Module):
+
+    def __init__(
+            self,
+            in_channels: int,
+            out_channels: int,
+            kernel_size: int,
+            stride: int = 1,
+            padding: int = 0,
+            dilation: int = 1,
+            groups: int = 1,
+            bias: bool = True
+    ) -> None:
+        super().__init__()
+
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.dilation = dilation
+        self.groups = groups
+
+        ########################################
+        # TODO: initialize weight and bias
+        # if bias is True, then bias should be zeros, otherwise set to None
+
+        self.weight = ...
+        self.bias = ...
+
+        # ENDTODO
+        ########################################
+
+    def forward(self, x: Variable) -> Variable:
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+
+class MaxPool2d(Module):
+
+    def __init__(self, window_size: int) -> None:
+        super().__init__()
+
+        self.window_size = window_size
+
+    def forward(self, x: Variable) -> Variable:
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
+        ########################################
+
+
+class Flatten(Module):
+
+    def forward(self, x: Variable) -> Variable:
+        ########################################
+        # TODO: implement
+
+        raise NotImplementedError
+
+        # ENDTODO
         ########################################
