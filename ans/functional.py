@@ -1,4 +1,5 @@
 import functools
+from math import floor
 from typing import Any, Optional, Union
 
 import torch
@@ -288,7 +289,7 @@ class Dropout(Function):
         ########################################
         m, p, training = cache
         if training:
-            dinput = torch.where(m > p, 0, doutput/(1-p))
+            dinput = torch.where(m > p, 0, doutput / (1 - p))
         else:
             dinput = doutput.clone()
         ########################################
@@ -383,6 +384,7 @@ class BatchNorm1d(Function):
 
         return dinput, dgamma, dbeta
 
+
 class BatchNorm2d(Function):
 
     @staticmethod
@@ -469,11 +471,9 @@ class Conv2d(Function):
             cache: tuple of intermediate results to use in backward
         """
         ########################################
-        # TODO: implement
 
-        raise NotImplementedError
-
-        # ENDTODO
+        output = torch.nn.functional.conv2d(input, weight, bias, stride, padding, dilation, groups)
+        cache = input, weight, bias, stride, padding, dilation, groups
         ########################################
 
         return output, cache
@@ -489,14 +489,44 @@ class Conv2d(Function):
         """
 
         ########################################
-        # TODO: implement
+        input, weight, bias, stride, padding, dilation, groups = cache
 
-        raise NotImplementedError
+        if stride > 1:
+            K = weight.shape[2]
+            M = input.shape[2], input.shape[3]  # w/h
+            Q = doutput.shape[2], doutput.shape[3]  # q1/q2
+            output_padding = tuple([(m - (q - 1) * stride + (2 * padding) - (K - 1) * dilation - 1)
+                                    for m, q in zip(M, Q)])
 
-        # ENDTODO
+            dinput = torch.nn.functional.conv_transpose2d(doutput, weight,
+                                                          stride=stride,
+                                                          padding=padding,
+                                                          output_padding=output_padding,
+                                                          groups=groups,
+                                                          dilation=dilation)
+        else:
+            dinput = torch.nn.functional.conv_transpose2d(input=doutput,
+                                                          weight=weight,
+                                                          stride=stride,
+                                                          padding=padding,
+                                                          groups=groups,
+                                                          dilation=dilation)
+
+        dbias = doutput.sum(3).sum(2).sum(0)
+
+        dweight = torch.nn.functional.conv2d(input=input.movedim(0, 1),  # switch dim to apply conv2d
+                                             weight=doutput.movedim(0, 1),
+                                             stride=dilation,
+                                             padding=padding,
+                                             dilation=stride,
+                                             groups=groups)
+        #
+        dweight = dweight[:, :, 0:weight.shape[2], 0:weight.shape[3]]
+
+        # dweight = torch.nn.functional.conv2d(input, weight, bias, stride, padding, dilation, groups)
         ########################################
 
-        return dinput, dweight, dbias
+        return dinput, dweight.movedim(0, 1), dbias
 
 
 class MaxPool2d(Function):

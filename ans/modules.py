@@ -70,6 +70,7 @@ class Module:
             elif isinstance(obj, Module):
                 for attr in dir(obj):
                     to(getattr(obj, attr))
+
         to(self)
         return self
 
@@ -220,45 +221,6 @@ class BatchNorm1d(Module):
                                                   )
 
         ########################################
-class BatchNorm1d(Module):
-
-    def __init__(
-            self,
-            num_features: int,
-            momentum: float = 0.9,
-            eps: float = 1e-5,
-            affine: bool = True
-    ) -> None:
-        super().__init__()
-
-        self.num_features = num_features
-        self.momentum = momentum
-        self.eps = eps
-        self.affine = affine
-
-        ########################################
-        # TODO: initialize gamma, beta, running_mean, running_var
-        # if affine, then gamma to ones (learnable), otherwise set to None
-        # if affine, then beta to zeros (learnable), otherwise set to None
-        # running_mean to zeros
-        # running_var to ones
-
-        self.gamma = ...
-        self.beta = ...
-        self.running_mean = ...
-        self.running_var = ...
-
-        # ENDTODO
-        ########################################
-
-    def forward(self, x: Variable) -> Variable:
-        ########################################
-        # TODO: implement
-
-        raise NotImplementedError
-
-        # ENDTODO
-        ########################################
 
 
 class BatchNorm2d(BatchNorm1d):
@@ -297,22 +259,25 @@ class Conv2d(Module):
         self.groups = groups
 
         ########################################
-        # TODO: initialize weight and bias
         # if bias is True, then bias should be zeros, otherwise set to None
+        i = 1 / math.sqrt(in_channels * (kernel_size ** 2))
+        self.weight = Variable((2 * i) * torch.rand(out_channels, in_channels, kernel_size, kernel_size) - i)
 
-        self.weight = ...
-        self.bias = ...
+        self.bias = Variable(torch.zeros(out_channels)) if bias else None
 
-        # ENDTODO
         ########################################
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
 
-        raise NotImplementedError
+        return ans.functional.Conv2d().apply(x,
+                                             self.weight,
+                                             self.bias,
+                                             stride=self.stride,
+                                             padding=self.padding,
+                                             dilation=self.dilation,
+                                             groups=self.groups)
 
-        # ENDTODO
         ########################################
 
 
