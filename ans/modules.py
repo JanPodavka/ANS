@@ -290,11 +290,9 @@ class MaxPool2d(Module):
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
 
-        raise NotImplementedError
+        return ans.functional.MaxPool2d.apply(x,self.window_size)
 
-        # ENDTODO
         ########################################
 
 
@@ -302,9 +300,8 @@ class Flatten(Module):
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
+        N = x.data.shape[0]
+        D = int(torch.prod(torch.Tensor(list(x.data.shape[1:]))).item())  # product of other shapes
+        return x.reshape(N, D)
 
-        raise NotImplementedError
-
-        # ENDTODO
         ########################################

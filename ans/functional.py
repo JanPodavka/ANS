@@ -1,4 +1,5 @@
 import functools
+import math
 from math import floor
 from typing import Any, Optional, Union
 
@@ -490,7 +491,7 @@ class Conv2d(Function):
 
         ########################################
         input, weight, bias, stride, padding, dilation, groups = cache
-
+        output_padding = (0, 0)
         if stride > 1:
             K = weight.shape[2]
             M = input.shape[2], input.shape[3]  # w/h
@@ -498,19 +499,13 @@ class Conv2d(Function):
             output_padding = tuple([(m - (q - 1) * stride + (2 * padding) - (K - 1) * dilation - 1)
                                     for m, q in zip(M, Q)])
 
-            dinput = torch.nn.functional.conv_transpose2d(doutput, weight,
-                                                          stride=stride,
-                                                          padding=padding,
-                                                          output_padding=output_padding,
-                                                          groups=groups,
-                                                          dilation=dilation)
-        else:
-            dinput = torch.nn.functional.conv_transpose2d(input=doutput,
-                                                          weight=weight,
-                                                          stride=stride,
-                                                          padding=padding,
-                                                          groups=groups,
-                                                          dilation=dilation)
+        dinput = torch.nn.functional.conv_transpose2d(input=doutput,
+                                                      weight=weight,
+                                                      stride=stride,
+                                                      padding=padding,
+                                                      output_padding=output_padding,
+                                                      groups=groups,
+                                                      dilation=dilation)
 
         dbias = doutput.sum(3).sum(2).sum(0)
 
@@ -523,7 +518,6 @@ class Conv2d(Function):
         #
         dweight = dweight[:, :, 0:weight.shape[2], 0:weight.shape[3]]
 
-        # dweight = torch.nn.functional.conv2d(input, weight, bias, stride, padding, dilation, groups)
         ########################################
 
         return dinput, dweight.movedim(0, 1), dbias
@@ -543,13 +537,19 @@ class MaxPool2d(Function):
         """
 
         ########################################
-        # TODO: implement
+        ## variable prepare
+        N, C, M1, M2 = input.shape
+        Q = int(M1 / window_size), int(M2 / window_size)
+        redundant = M1 % window_size, M2 % window_size
+        input = input[:, :, 0:(M1 - redundant[0]), 0:(M2 - redundant[1])]  # odstranění hodnot
+        ##MAXPOOL
+        output = input.reshape(N, C, Q[0], window_size, Q[1], window_size)  # reshape pro šířku i výšku
+        output = output.transpose(3, 4)  # transpozice přidaných pozic na poslední místa
 
-        raise NotImplementedError
-
-        # ENDTODO
+        output = output.reshape(N, C, Q[0], Q[1], window_size * window_size)  # reshape
+        output, idx = output.max(dim=4)  # maxpool
         ########################################
-
+        cache = N, C, M1, M2, window_size, idx, output,input
         return output, cache
 
     @staticmethod
@@ -563,11 +563,12 @@ class MaxPool2d(Function):
         """
 
         ########################################
-        # TODO: implement
-
-        raise NotImplementedError
-
-        # ENDTODO
+        N, C, M1, M2, window_size, idx, output,input = cache
+        print(doutput.shape,output.shape,input.shape,idx.shape)
+        x = torch.gather(output,3 , idx)
+        print(x)
+        dinput = torch.zeros(N, C, M1, M2)
+        dinput[idx] = output[idx]
         ########################################
 
         return dinput,

@@ -86,12 +86,14 @@ class Variable:
 
     def reshape(self, *shape: int) -> 'Variable':
         ########################################
-        # TODO: implement
+        def grad_fn(dout: torch.Tensor) -> tuple[torch.Tensor,]:
+            return dout.reshape(self.data.shape),
 
-        raise NotImplementedError
-
-        # ENDTODO
-        ########################################
+        return Variable(
+            self.data.reshape(shape).clone(),
+            parents=(self,),
+            grad_fn=grad_fn
+        )
 
     def predecessors(self) -> list['Variable']:
         """
@@ -130,7 +132,7 @@ class Variable:
                 grad = node.grad_fn(node.grad)
                 for i, parent in enumerate(node.parents):
                     if parent.grad is not None:
-                        parent.grad += grad[i] # acumulation of gradients
+                        parent.grad += grad[i]  # acumulation of gradients
                     else:
                         parent.grad = grad[i]
         ########################################
@@ -172,7 +174,7 @@ class Variable:
                     node_label += f" | grad = {node.grad.item():.3f}"
             return node_uid, node_label
 
-        def get_func_info(node:'Variable') -> tuple[str, str]:
+        def get_func_info(node: 'Variable') -> tuple[str, str]:
             """
             The function is analogous to get_node_info, but used for graph nodes that represent operations such as summation or
             multiplication. Automatically determines unique identifier and display label.
@@ -212,8 +214,6 @@ class Variable:
         #######################################
 
         return dot
-
-
 
 
 def numeric_gradient(
@@ -262,7 +262,6 @@ def gradcheck(
         dout = torch.randn_like(output.data)
     output.backprop(dout=dout)
     grads_ana = [i.grad for i in inputs if isinstance(i, Variable)]
-
     # Numeric gradients
     ok = True
     for i, input in enumerate(inputs):
@@ -290,6 +289,7 @@ def gradcheck(
                 print('\033[30m')  # end red color
 
     return ok
+
 
 def dfs(root, out, visited):
     if root.parents:
