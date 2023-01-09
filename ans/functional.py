@@ -549,7 +549,7 @@ class MaxPool2d(Function):
         output = output.reshape(N, C, Q[0], Q[1], window_size * window_size)  # reshape
         output, idx = output.max(dim=4)  # maxpool
         ########################################
-        cache = N, C, M1, M2, window_size, idx, output
+        cache = N, C, M1, M2, window_size, idx
         return output, cache
 
     @staticmethod
@@ -563,24 +563,22 @@ class MaxPool2d(Function):
         """
 
         ########################################
-        # INIT
-        N, C, M1, M2, window_size, idx, output = cache
+        # INIT dat
+        N, C, M1, M2, window_size, idx = cache
         Q = int(M1 / window_size), int(M2 / window_size)
+        redundant = (M1 % window_size, M2 % window_size)
         dinput = torch.zeros(N, C, M1, M2, dtype=torch.float64)
-        redundant = M1 % window_size, M2 % window_size
-        dinput = dinput[:, :, 0:(M1 - redundant[0]), 0:(M2 - redundant[1])]  # odstranění hodnot
-        dinput = dinput.reshape(N, C, Q[0], window_size, Q[1], window_size)  # reshape pro šířku i výšku
-        dinput = dinput.transpose(3, 4)  # transpozice přidaných pozic na poslední místa
-        dinput = dinput.reshape(N, C, Q[0], Q[1], window_size * window_size)  # reshape
-        dinput[:, :, :, :, idx] = doutput
-        #
-        dinput = dinput.transpose(3, 4)
-        dinput = dinput.reshape(N, C, Q[0], window_size, Q[1], window_size)
+        # získat matici před .max()
+        dinput = dinput[:, :, :M1 - redundant[0], :M2 - redundant[1]]
+        dinput = dinput.reshape(N, C, Q[0], window_size, Q[1], window_size).transpose(3, 4)
+        dinput = dinput.reshape(N, C, Q[0], Q[1], window_size * window_size)
+        # nahradit nuly na indexech maximy
+        dinput = dinput.scatter_(4, idx.unsqueeze(-1), doutput.unsqueeze(-1))
+        # vrátit do původního tvaru - reverzní postup
+        dinput = dinput.reshape(N,C,Q[0],Q[1],window_size,window_size).transpose(3, 4)
         dinput = dinput.reshape(N, C, M1 - redundant[0], M2 - redundant[1])
-        print(dinput.shape, (N, C, M1, M2))
-
-        dinput = torch.nn.functional.pad(dinput, (0, M1-dinput.shape[2], 0, M2-dinput.shape[3]))
-        print(dinput.shape, (N, C, M1, M2))
+        # přidat odříznuté hodnoty
+        dinput = torch.nn.functional.pad(dinput, (0, M2 - dinput.shape[3], 0, M1 - dinput.shape[2]))
 
 
         return dinput,
