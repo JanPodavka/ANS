@@ -291,7 +291,7 @@ class MaxPool2d(Module):
     def forward(self, x: Variable) -> Variable:
         ########################################
 
-        return ans.functional.MaxPool2d.apply(x,self.window_size)
+        return ans.functional.MaxPool2d.apply(x, self.window_size)
 
         ########################################
 

@@ -549,7 +549,7 @@ class MaxPool2d(Function):
         output = output.reshape(N, C, Q[0], Q[1], window_size * window_size)  # reshape
         output, idx = output.max(dim=4)  # maxpool
         ########################################
-        cache = N, C, M1, M2, window_size, idx, output,input
+        cache = N, C, M1, M2, window_size, idx, output
         return output, cache
 
     @staticmethod
@@ -563,12 +563,24 @@ class MaxPool2d(Function):
         """
 
         ########################################
-        N, C, M1, M2, window_size, idx, output,input = cache
-        print(doutput.shape,output.shape,input.shape,idx.shape)
-        x = torch.gather(output,3 , idx)
-        print(x)
-        dinput = torch.zeros(N, C, M1, M2)
-        dinput[idx] = output[idx]
-        ########################################
+        # INIT
+        N, C, M1, M2, window_size, idx, output = cache
+        Q = int(M1 / window_size), int(M2 / window_size)
+        dinput = torch.zeros(N, C, M1, M2, dtype=torch.float64)
+        redundant = M1 % window_size, M2 % window_size
+        dinput = dinput[:, :, 0:(M1 - redundant[0]), 0:(M2 - redundant[1])]  # odstranění hodnot
+        dinput = dinput.reshape(N, C, Q[0], window_size, Q[1], window_size)  # reshape pro šířku i výšku
+        dinput = dinput.transpose(3, 4)  # transpozice přidaných pozic na poslední místa
+        dinput = dinput.reshape(N, C, Q[0], Q[1], window_size * window_size)  # reshape
+        dinput[:, :, :, :, idx] = doutput
+        #
+        dinput = dinput.transpose(3, 4)
+        dinput = dinput.reshape(N, C, Q[0], window_size, Q[1], window_size)
+        dinput = dinput.reshape(N, C, M1 - redundant[0], M2 - redundant[1])
+        print(dinput.shape, (N, C, M1, M2))
+
+        dinput = torch.nn.functional.pad(dinput, (0, M1-dinput.shape[2], 0, M2-dinput.shape[3]))
+        print(dinput.shape, (N, C, M1, M2))
+
 
         return dinput,
