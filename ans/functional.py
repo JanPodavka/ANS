@@ -565,7 +565,7 @@ class MaxPool2d(Function):
         N, C, M1, M2, window_size, idx = cache
         Q = int(M1 / window_size), int(M2 / window_size)
         redundant = (M1 % window_size, M2 % window_size)
-        dinput = torch.zeros(N, C, M1, M2).to(dtype =doutput.dtype)
+        dinput = torch.zeros(N, C, M1, M2).to(dtype =doutput.dtype,device=doutput.device)
         # získat matici před .max()
         dinput = dinput[:, :, :M1 - redundant[0], :M2 - redundant[1]]
         dinput = dinput.reshape(N, C, Q[0], window_size, Q[1], window_size).transpose(3, 4)
