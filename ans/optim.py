@@ -69,12 +69,13 @@ class Adam(Optimizer):
         self.eps = eps
 
         ########################################
+        device = device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        self._num_steps = torch.zeros(1).to(device= device)
 
-        self._num_steps = torch.zeros(1)
         self._m: dict[Variable, torch.Tensor] = dict(zip(parameters, len(parameters) *
-                                                         [torch.zeros(1).to(dtype=torch.float16)]))
+                                                         [torch.zeros(1).to(dtype=torch.float16,device= device)]))
         self._v: dict[Variable, torch.Tensor] = dict(zip(parameters, len(parameters) *
-                                                         [torch.zeros(1).to(dtype=torch.float16)]))
+                                                         [torch.zeros(1).to(dtype=torch.float16,device= device)]))
 
         ########################################
 
