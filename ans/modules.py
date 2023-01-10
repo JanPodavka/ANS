@@ -200,8 +200,8 @@ class BatchNorm1d(Module):
 
         ########################################
 
-        self.gamma = torch.ones(num_features) if affine else None
-        self.beta = torch.zeros(num_features) if affine else None
+        self.gamma = Variable(torch.ones(num_features)) if affine else None
+        self.beta = Variable(torch.zeros(num_features)) if affine else None
         self.running_mean = torch.zeros(num_features)
         self.running_var = torch.ones(num_features)
 
