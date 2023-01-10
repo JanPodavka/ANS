@@ -227,11 +227,14 @@ class BatchNorm2d(BatchNorm1d):
 
     def forward(self, x: Variable) -> Variable:
         ########################################
-        # TODO: implement
-
-        raise NotImplementedError
-
-        # ENDTODO
+        return ans.functional.BatchNorm2d().apply(x,
+                                                  self.gamma,
+                                                  self.beta,
+                                                  self.running_mean,
+                                                  self.running_var,
+                                                  momentum=self.momentum,
+                                                  eps=self.eps,
+                                                  training=self.training)
         ########################################
 
 
