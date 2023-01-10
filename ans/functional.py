@@ -417,7 +417,7 @@ class BatchNorm2d(Function):
 
         ########################################
         N, C, M1, M2 = input.shape
-        input = input.permute(0, 2, 3, 1)
+        input = input.permute(0, 2, 3, 1) # from N*C*M1*M2 to N*M1*M2*C
         input = input.reshape(N * M1 * M2, C)
         output, cache = BatchNorm1d.forward(input, gamma, beta, running_mean, running_var, momentum, eps, training)
         output = output.reshape(N, M1, M2, C).permute(0, 3, 1, 2)
@@ -503,7 +503,7 @@ class Conv2d(Function):
                                                       padding=padding,
                                                       output_padding=output_padding,
                                                       groups=groups,
-                                                      dilation=dilation)
+                                                      dilation=dilation).to(dtype = input.dtype)
 
         dbias = doutput.sum(3).sum(2).sum(0)
 
@@ -565,17 +565,17 @@ class MaxPool2d(Function):
         N, C, M1, M2, window_size, idx = cache
         Q = int(M1 / window_size), int(M2 / window_size)
         redundant = (M1 % window_size, M2 % window_size)
-        dinput = torch.zeros(N, C, M1, M2)
+        dinput = torch.zeros(N, C, M1, M2).to(dtype =doutput.dtype)
         # získat matici před .max()
         dinput = dinput[:, :, :M1 - redundant[0], :M2 - redundant[1]]
         dinput = dinput.reshape(N, C, Q[0], window_size, Q[1], window_size).transpose(3, 4)
         dinput = dinput.reshape(N, C, Q[0], Q[1], window_size * window_size)
         # nahradit nuly na indexech maximy
-        dinput = dinput.to(torch.double).scatter_(4, idx.unsqueeze(-1), doutput.to(torch.double).unsqueeze(-1))
+        dinput = dinput.scatter(dim=4, index = idx.unsqueeze(-1),src = doutput.unsqueeze(-1))
         # vrátit do původního tvaru - reverzní postup
         dinput = dinput.reshape(N, C, Q[0], Q[1], window_size, window_size).transpose(3, 4)
         dinput = dinput.reshape(N, C, M1 - redundant[0], M2 - redundant[1])
         # přidat odříznuté hodnoty
         dinput = torch.nn.functional.pad(dinput, (0, M2 - dinput.shape[3], 0, M1 - dinput.shape[2]))
 
-        return dinput.to(torch.double),
+        return dinput,

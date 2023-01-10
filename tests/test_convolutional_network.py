@@ -65,12 +65,12 @@ class TestConv2dModule(ANSTestCase):
 
     def test_init(self):
         conv = ans.modules.Conv2d(256, 512, 5, padding=2)
+        print(conv.weight.data.shape)
         self.assertIsInstance(conv.weight, ans.autograd.Variable)
         self.assertIsInstance(conv.bias, ans.autograd.Variable)
         self.assertTensorsClose(conv.weight.data.mean(), torch.tensor(0.))
         self.assertGreaterEqual(conv.weight.data.min(), -0.0125)
         self.assertLessEqual(conv.weight.data.max(), 0.0125)
-
         h = conv.weight.data.histogram(bins=10, range=(-0.0125, 0.0125))[0] / conv.weight.data.numel()
         expected_h = 0.1 * torch.ones(10)
         self.assertTensorsClose(h, expected_h, rtol=1e-2, atol=1e-2)
@@ -323,6 +323,8 @@ class TestSteps(ANSTestCase):
         for i in range(10):
             loss1, acc1 = self.params['train_step_fn'](inputs, targets, self.model, criterion, optimizer)
         expected_loss1, expected_acc1 = 1.1541, 0.4
+        print(expected_acc1,acc1)
+        print(expected_loss1,loss1)
         self.assertTensorsClose(loss1, expected_loss1)
         self.assertTensorsClose(acc1, expected_acc1)
 
@@ -458,7 +460,6 @@ class TestBatchNorm2d(ANSTestCase):
             x_var = randn_var(6, 7, 5, 11, mean=torch.randn(1).item(), std=torch.rand(1).item())
             z_var = ans_batchnorm(x_var)
             z = torch_batchnorm(x_var.data)
-
             self.assertIsInstance(z_var, ans.autograd.Variable)
             self.assertTensorsClose(z_var.data, z, msg=f"i={i}")
             self.assertTensorsClose(ans_batchnorm.running_mean, torch_batchnorm.running_mean)
